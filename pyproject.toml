@@ -1,0 +1,32 @@
+[build-system]
+requires = [
+    "hatchling>=1.27",
+    "packaging>=24",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "zig-cli-pypi-demo"
+version = "0.0.1"
+description = "zig-cli-pypi-demo"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Noai-oss", email = "jiuwoxiao@outlook.com" },
+]
+
+[project.urls]
+Repository = "https://github.com/Noai-oss/zig-cli-pypi-demo"
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/zypi_demo"]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "hatch_build.py"
+
+[dependency-groups]
+dev = [
+    "tomli>=2.4.1 ; python_full_version < '3.11'",
+]
