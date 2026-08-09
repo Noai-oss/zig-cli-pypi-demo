@@ -1,6 +1,7 @@
 import argparse
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -32,6 +33,28 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def run_command(
+    command: Sequence[str],
+    *,
+    check: bool = True,
+    capture_output: bool = False,
+    text: bool = False,
+) -> subprocess.CompletedProcess[str]:
+    # Use the host platform's quoting rules so the logged command can be
+    # copied into a terminal and run manually when a release step fails.
+    command_text = (
+        subprocess.list2cmdline(command) if os.name == "nt" else shlex.join(command)
+    )
+    print(f"==> {command_text}", flush=True)
+    return subprocess.run(
+        command,
+        cwd=ROOT,
+        check=check,
+        capture_output=capture_output,
+        text=text,
+    )
+
+
 def read_zig_version() -> str:
     zon = (ROOT / "build.zig.zon").read_text(encoding="utf-8")
     match = re.search(r'^\s*\.version\s*=\s*"([^"]+)"\s*,', zon, re.MULTILINE)
@@ -41,10 +64,8 @@ def read_zig_version() -> str:
 
 
 def ensure_clean_worktree() -> None:
-    result = subprocess.run(
+    result = run_command(
         ["git", "status", "--porcelain"],
-        cwd=ROOT,
-        check=True,
         capture_output=True,
         text=True,
     )
@@ -53,10 +74,8 @@ def ensure_clean_worktree() -> None:
 
 
 def ensure_tag_is_new(tag: str) -> None:
-    print(f"==> Checking local Git tag: {tag}", flush=True)
-    result = subprocess.run(
+    result = run_command(
         ["git", "rev-parse", "--quiet", "--verify", f"refs/tags/{tag}"],
-        cwd=ROOT,
         check=False,
         capture_output=True,
         text=True,
@@ -93,27 +112,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     if dist.exists():
         shutil.rmtree(dist)
 
-    subprocess.run([sys.executable, "make_wheels.py"], cwd=ROOT, check=True)
+    run_command([sys.executable, "make_wheels.py"])
 
     wheels = sorted(dist.glob("*.whl"))
     if len(wheels) != len(TARGETS):
         fail(f"Expected {len(TARGETS)} wheels, found {len(wheels)}")
 
-    subprocess.run(
-        ["uvx", "twine", "check", *(str(wheel) for wheel in wheels)],
-        cwd=ROOT,
-        check=True,
-    )
+    run_command(["uvx", "twine", "check", *(str(wheel) for wheel in wheels)])
 
-    # NOTE: Push the tag before the irreversible PyPI upload. The push also
+    # Push the tag before the irreversible PyPI upload. The push also
     # catches an existing remote tag without requiring a separate fetch/check.
-    subprocess.run(["git", "tag", "-a", tag, "-m", tag], cwd=ROOT, check=True)
-    subprocess.run(["git", "push", "origin", tag], cwd=ROOT, check=True)
-    subprocess.run(
-        ["uv", "publish", *(str(wheel) for wheel in wheels)],
-        cwd=ROOT,
-        check=True,
-    )
+    run_command(["git", "tag", "-a", tag, "-m", tag])
+    run_command(["git", "push", "origin", tag])
+    run_command(["uv", "publish", *(str(wheel) for wheel in wheels)])
     return 0
 
 

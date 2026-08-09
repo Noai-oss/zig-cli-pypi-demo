@@ -9,7 +9,7 @@ import zipfile
 from collections.abc import Sequence
 from pathlib import Path
 
-# NOTE: tomllib is available in Python 3.11+. The conditional dev dependency
+# tomllib is available in Python 3.11+. The conditional dev dependency
 # supplies the same API as tomli when this release script runs on Python 3.10.
 if sys.version_info >= (3, 11):
     import tomllib
@@ -31,7 +31,6 @@ TARGETS = {
 
 
 def _make_wheel_script_executable(wheel: Path) -> None:
-    # NOTE: Hatchling stores shared scripts in the wheel's .data/scripts tree.
     script_suffix = f".data/scripts/{CLI_NAME}"
 
     with zipfile.ZipFile(wheel) as source:
@@ -44,13 +43,11 @@ def _make_wheel_script_executable(wheel: Path) -> None:
             )
 
         script_info = matches[0]
-        # NOTE: ZIP stores Unix mode bits in the upper 16 bits of external_attr.
-        # Skip rewriting when user, group, and others can already execute it.
         if (script_info.external_attr >> 16) & 0o111 == 0o111:
             return
 
-        # NOTE: ZIP entry metadata cannot be updated safely in place, so build
-        # a sibling archive and replace the original only after it is complete.
+        # ZIP entries cannot be modified in place, so rebuild the wheel
+        # before replacing the original archive.
         with tempfile.NamedTemporaryFile(
             dir=wheel.parent,
             prefix=f".{wheel.name}.",
@@ -63,8 +60,8 @@ def _make_wheel_script_executable(wheel: Path) -> None:
             with zipfile.ZipFile(temporary_path, "w") as destination:
                 for info in source.infolist():
                     if info.filename == script_info.filename:
-                        # NOTE: create_system=3 marks Unix metadata. Keep the
-                        # lower DOS attributes while setting regular-file 0755.
+                        # Unix file modes occupy the upper 16 bits of
+                        # external_attr when create_system is 3.
                         info.create_system = 3
                         info.external_attr = ((stat.S_IFREG | 0o755) << 16) | (
                             info.external_attr & 0xFFFF
@@ -74,8 +71,6 @@ def _make_wheel_script_executable(wheel: Path) -> None:
             temporary_path.unlink(missing_ok=True)
             raise
 
-    # NOTE: Both ZIP handles are closed before replacement, which is required
-    # on Windows because open files cannot be replaced reliably.
     try:
         temporary_path.replace(wheel)
     finally:
@@ -127,8 +122,6 @@ def build_wheel(
         f"\n==> {zig_target} -> {wheel_tag}",
         flush=True,
     )
-    # NOTE: The repository already ignores build outputs, so uv does not need
-    # to create another .gitignore inside the selected output directory.
     subprocess.run(
         [
             "uv",
@@ -136,14 +129,13 @@ def build_wheel(
             "--wheel",
             "--out-dir",
             str(out_dir),
-            "--no-create-gitignore",
         ],
         cwd=ROOT,
         env=env,
         check=True,
     )
 
-    # NOTE: Wheel filenames normalize each run of '-', '_', and '.' in the
+    # Wheel filenames normalize each run of '-', '_', and '.' in the
     # distribution name to a single underscore.
     # https://packaging.python.org/en/latest/specifications/binary-distribution-format/#escaping-and-unicode
     wheel_name = re.sub(r"[-_.]+", "_", distribution_name)
@@ -151,8 +143,8 @@ def build_wheel(
     if not wheel.is_file():
         raise FileNotFoundError(f"Build did not produce the expected wheel: {wheel}")
 
-    # NOTE: Windows cannot record POSIX execute bits with chmod. Repair only
-    # Unix-target wheels created by this Windows cross-build entry point.
+    # A Windows host cannot set Unix executable bits with chmod.
+    # Store mode 0755 in Unix-target wheel ZIP metadata instead.
     if os.name == "nt" and "windows" not in zig_target:
         _make_wheel_script_executable(wheel)
 
@@ -166,8 +158,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     out_dir = args.out_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # NOTE: --target may be repeated; using a set avoids duplicate builds while
-    # TARGETS still determines the stable build order.
+    # Avoid duplicate targets
     selected = set(args.target or ())
     targets = (
         (zig_target, wheel_tag)

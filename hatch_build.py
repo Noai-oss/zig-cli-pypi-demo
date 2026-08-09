@@ -17,8 +17,6 @@ class CustomBuildHook(BuildHookInterface):
         zig_target = os.getenv(f"{CLI_NAME_UPPER}_ZIG_TARGET")
         wheel_tag = os.getenv(f"{CLI_NAME_UPPER}_WHEEL_TAG")
 
-        # NOTE: Requiring both values prevents the compiled target and the
-        # compatibility tag advertised by the wheel from diverging.
         if bool(zig_target) != bool(wheel_tag):
             raise RuntimeError(
                 f"{CLI_NAME_UPPER}_ZIG_TARGET and {CLI_NAME_UPPER}_WHEEL_TAG must either both be set or both be unset"
@@ -30,8 +28,6 @@ class CustomBuildHook(BuildHookInterface):
 
         subprocess.run(command, cwd=self.root, check=True)
 
-        # NOTE: Cross-builds choose the executable suffix from the target OS;
-        # local builds fall back to the host OS.
         target_is_windows = "windows" in zig_target if zig_target else os.name == "nt"
         binary_name = f"{CLI_NAME}.exe" if target_is_windows else CLI_NAME
         binary = Path(self.root, "zig-out", "bin", binary_name)
@@ -40,16 +36,12 @@ class CustomBuildHook(BuildHookInterface):
                 f"Zig did not produce the expected binary: {binary}"
             )
         if binary.suffix != ".exe":
-            # NOTE: This works on Unix hosts. Windows-hosted Unix wheels get
-            # their POSIX execute bits repaired by make_wheels.py.
+            # Windows chmod cannot set Unix execute bits, so make_wheels.py
+            # writes mode 0755 into cross-built Unix wheel metadata instead.
             binary.chmod(binary.stat().st_mode | 0o111)
 
         build_data["pure_python"] = False
-        # NOTE: Cross-builds supply an explicit tag; local builds derive the
-        # current interpreter's platform tag.
         build_data["tag"] = wheel_tag or f"py3-none-{next(iter(sys_tags())).platform}"
 
-        # NOTE: shared_scripts installs the native binary into the environment's
-        # scripts directory rather than inside the importable Python package.
         source = binary.relative_to(self.root).as_posix()
         build_data["shared_scripts"][source] = binary_name
