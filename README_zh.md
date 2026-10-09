@@ -13,14 +13,7 @@ pip install zig-cli-pypi-demo
 zypi-demo
 ```
 
-也可以通过 Python 模块运行：
-
-```console
-python -m zypi_demo
-```
-
-Python 启动器和可执行文件查找逻辑改编自
-[Ruff](https://github.com/astral-sh/ruff/tree/6f86de2eb6363f77a314998c414ac8b53849b92f/python/ruff)。
+wheel 会将原生 `zypi-demo` 可执行文件直接安装到当前环境的命令目录。
 
 ## 支持平台
 

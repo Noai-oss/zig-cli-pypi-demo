@@ -21,7 +21,8 @@ authors = [
 Repository = "https://github.com/Noai-oss/zig-cli-pypi-demo"
 
 [tool.hatch.build.targets.wheel]
-packages = ["python/zypi_demo"]
+# The build hook supplies the native executable via shared_scripts.
+bypass-selection = true
 
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "hatch_build.py"
