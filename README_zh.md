@@ -10,10 +10,13 @@
 
 ```console
 pip install zig-cli-pypi-demo
-zypi-demo
 ```
 
-wheel 会将原生 `zypi-demo` 可执行文件直接安装到当前环境的命令目录。
+安装后，在终端直接运行：
+
+```console
+zypi-demo
+```
 
 ## 支持平台
 

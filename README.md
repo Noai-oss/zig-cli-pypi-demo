@@ -11,11 +11,13 @@ Install from PyPI:
 
 ```console
 pip install zig-cli-pypi-demo
-zypi-demo
 ```
 
-The wheel installs the native `zypi-demo` executable directly into the
-environment's scripts directory.
+After installation, run the command in your terminal:
+
+```console
+zypi-demo
+```
 
 ## Supported platforms
 
