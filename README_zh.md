@@ -10,17 +10,13 @@
 
 ```console
 pip install zig-cli-pypi-demo
-zypi-demo
 ```
 
-也可以通过 Python 模块运行：
+安装后，在终端直接运行：
 
 ```console
-python -m zypi_demo
+zypi-demo
 ```
-
-Python 启动器和可执行文件查找逻辑改编自
-[Ruff](https://github.com/astral-sh/ruff/tree/6f86de2eb6363f77a314998c414ac8b53849b92f/python/ruff)。
 
 ## 支持平台
 

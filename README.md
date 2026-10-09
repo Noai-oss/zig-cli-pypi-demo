@@ -11,17 +11,13 @@ Install from PyPI:
 
 ```console
 pip install zig-cli-pypi-demo
-zypi-demo
 ```
 
-You can also run it as a Python module:
+After installation, run the command in your terminal:
 
 ```console
-python -m zypi_demo
+zypi-demo
 ```
-
-The Python launcher and executable lookup logic are adapted from
-[Ruff](https://github.com/astral-sh/ruff/tree/6f86de2eb6363f77a314998c414ac8b53849b92f/python/ruff).
 
 ## Supported platforms
 
