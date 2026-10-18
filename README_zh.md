@@ -21,10 +21,13 @@ zypi-demo
 ## 支持平台
 
 - Windows x86-64（`win_amd64`）
+- Windows ARM64（`win_arm64`）
 - macOS x86-64（`macosx_11_0_x86_64`）
 - macOS Arm64（`macosx_11_0_arm64`）
-- Linux x86-64（`manylinux_2_17_x86_64`）
-- Linux Arm64（`manylinux_2_17_aarch64`）
+- Linux glibc 2.17+ x86-64（`manylinux_2_17_x86_64`）
+- Linux glibc 2.17+ ARM64（`manylinux_2_17_aarch64`）
+- Linux musl 1.2+ x86-64（`musllinux_1_2_x86_64`）
+- Linux musl 1.2+ ARM64（`musllinux_1_2_aarch64`）
 
 ## 开发与构建
 
@@ -35,7 +38,7 @@ uv sync
 uv run zypi-demo
 ```
 
-将五个平台的 wheel 构建到 `dist/`：
+将八个平台的 wheel 构建到 `dist/`：
 
 ```console
 uv run python make_wheels.py
@@ -53,4 +56,4 @@ uv run python make_wheels.py
 uv run python pypi_publish.py 0.0.1
 ```
 
-脚本检查版本、工作区和本地及远程标签，构建并校验五个平台的 wheel，先上传 PyPI，成功后再创建并推送版本标签。
+脚本检查版本、工作区和本地及远程标签，构建并校验八个平台的 wheel，先上传 PyPI，成功后再创建并推送版本标签。
