@@ -22,10 +22,13 @@ zypi-demo
 ## Supported platforms
 
 - Windows x86-64 (`win_amd64`)
+- Windows ARM64 (`win_arm64`)
 - macOS x86-64 (`macosx_11_0_x86_64`)
 - macOS Arm64 (`macosx_11_0_arm64`)
-- Linux x86-64 (`manylinux_2_17_x86_64`)
-- Linux Arm64 (`manylinux_2_17_aarch64`)
+- Linux glibc 2.17+ x86-64 (`manylinux_2_17_x86_64`)
+- Linux glibc 2.17+ ARM64 (`manylinux_2_17_aarch64`)
+- Linux musl 1.2+ x86-64 (`musllinux_1_2_x86_64`)
+- Linux musl 1.2+ ARM64 (`musllinux_1_2_aarch64`)
 
 Python 3.10 is the minimum supported version.
 
@@ -39,7 +42,7 @@ uv sync
 uv run zypi-demo
 ```
 
-Build all five wheels into `dist/`:
+Build all eight wheels into `dist/`:
 
 ```console
 uv run python make_wheels.py
@@ -62,5 +65,5 @@ uv run python pypi_publish.py 0.0.1
 ```
 
 The script checks the versions, working tree, and local and remote tags, then
-builds and validates all five wheels. It publishes to PyPI first, then creates
+builds and validates all eight wheels. It publishes to PyPI first, then creates
 and pushes the version tag.
